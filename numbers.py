@@ -5,45 +5,64 @@ from ThreadWithReturn import ThreadWithReturn
 import threading
 import random
 from primesieve import Iterator
+from bs4 import BeautifulSoup
+import requests
+import json
 
 class Number:
     """
-    A class used to get information about a number
+    A class used to get information about a number.
 
     ...
 
     Methods
     --------
     is_prime(n)
-        Checks if number is prime and returns True/False
-        After 30 seconds times out and raises exception
+        Checks if number is prime and returns True/False.
+        After 30 seconds times out and raises exception.
     is_palindromic(n)
-        Checks if the number is palindromic (Reads the same from beginning and end)
-        After 5 seconds times out and raises exception
+        Checks if the number is palindromic (Reads the same from beginning and end).
+        After 5 seconds times out and raises exception.
     is_square(n)
-        Checks if number is square (It's square root is integer)
-        After 5 seconds times out and raises exception
+        Checks if number is square (It's square root is integer).
+        After 5 seconds times out and raises exception.
     is_triangle(n)
-        Checks if number is triangle
-        After 5 seconds times out and raises exception
+        Checks if number is triangle.
+        After 5 seconds times out and raises exception.
     get_divisors_check_semiprime(n)
-        Gets all n's divisors and check if n is semiprime
+        Gets all n's divisors and check if n is semiprime.
     check_primality(n)
-        Checks if number is prime and handles eventual exception
+        Checks if number is prime and handles eventual exception.
     get_number_systems(n)
-        Gets n in binary, hexadecimal, octal and decimal systems
+        Gets n in binary, hexadecimal, octal and decimal systems.
     check_additional(n)
         Gets additional information about n - is_square, is_triangle, is_palindromic, is taxicab
-        and handles exceptions
+        and handles exceptions.
+    compare_speed(n)
+        Compares n to the speed of light and sound.
+    check_roots(n)
+        Check if n is a power of any number in range <2;11>.
+    check_bus(n)
+        Check if n is a number of a bus. If yes return the list of stops of this bus (in Poland).
+    check_year(n)
+        Assumes that n is a year and checks if it's leap.
+    check_phone(n)
+        Assumes that n is a phone number and checks from which country is it.
     check_number(n)
-        Checks if n is a positive integer
+        Checks if n is a positive integer.
     run(n)
-        Runs all of the above and returns all the information as a dictionary
+        Runs all of the above and returns all the information as a dictionary.
     """
 
     def __init__(self):
         self._smallprimeset = set(self._prime_generator(10000))
         self._smallprimeset_n = 10000
+
+        # dictionary comes from - https://gist.github.com/Goles/3196253
+        f = open('phone_numbers.json', )
+        self._phone_data = json.load(f)
+        f.close()
+
         self.divisors_tab = []
         self.semiprime = False
         self.factors = []
@@ -220,12 +239,13 @@ class Number:
         False
             If isn't square or if number is bigger than 999999999999999
         """
+
         if n > 999999999999999:
             return False
 
         element = math.sqrt(n)
         if math.floor(element) == math.ceil(element):
-            print(element)
+            print("Liczba kwadratowa: " + str(element))
             return True
         return False
 
@@ -250,6 +270,7 @@ class Number:
         False
             If isn't triangle
         """
+
         delta = 1 - 4 * (-2 * n)
         if delta < 0:
             return False
@@ -277,6 +298,7 @@ class Number:
         False
             If timed out
         """
+
         print('Divisors: Start')
         start_time = time.time()
 
@@ -383,9 +405,7 @@ class Number:
                 data['triangle'] = True
 
             if self.is_square(n):
-                print("Liczba kwadratowa")
                 data['square'] = True
-
         except TimeoutError:
             print('Additional: Timeout after {}'.format(time.time() - start_time))
             data['additional_timeout'] = True
@@ -431,8 +451,13 @@ class Number:
         False
             If n isn't a power of any of the numbers in range
         list
-            A list with numbers that n is a power of.
+            A list of objects:
+            {
+                'number': A number that n is a power of
+                'power': A power of the number
+            }
         """
+        
         if n > 9999999999999999:
             return False
 
@@ -440,14 +465,113 @@ class Number:
         for i in range(2, 12):
             tmp = n
             is_power = True
+            count = 0
             while tmp != 1:
+                count += 1
                 tmp /= i
                 if math.ceil(tmp) != math.floor(tmp):
                     is_power = False
                     break
             if is_power:
-                data.append(i)
+                data.append({'number': i, 'power': count})
         return data
+
+    @Timeout(10)
+    def check_bus(self, n):
+        """Function checks if n is a bus number and
+        if n is a bus number it returns all of it stops.
+
+        Parameters
+        ----------
+        n : int
+            Number to check
+
+        Raises
+        -------
+        TimeoutError
+            When is running for more than 10 seconds.
+
+        Returns
+        --------
+        list
+            A list with all stops of the bus (in Poland)
+            If number is not a bus number it returns an empty list
+        """
+
+        BUS_URL = "https://rj.metropoliaztm.pl/rozklady/1-{}/"
+
+        if n <= 998:
+            url = BUS_URL.format(n)
+            print(url)
+            response = requests.get(url)
+            data = response.text
+            if "404 Wybrana strona nie istnieje" in data:
+                return []
+
+            soup = BeautifulSoup(data, features='html.parser')
+            stops = soup.find_all('a', {'class': 'direction-list-group-item'})
+
+            special_chars = [260, 262, 280, 321, 323, 211, 346, 377, 379]
+            final_list = []
+            for stop in stops[:math.ceil(len(stops) / 2)]:
+                text = stop.text.replace("\n", "").replace(" ", "").replace("\t", "").replace(chr(160), "")
+
+                i = 0
+                shift = 0
+                for char in text:
+                    if (64 < ord(char) < 91 or ord(char) in special_chars) and i != 0:
+                        text = text[:i + shift] + " " + text[i + shift:]
+                        shift += 1
+                    elif 47 < ord(char) < 58:
+                        text = text[:i + shift]
+                    i += 1
+
+                final_list.append(text)
+
+            return final_list
+        else:
+            return []
+
+    def check_year(self, n):
+        """Function assumes that number is a year and checks if it's a leap year.
+
+        Parameters
+        -----------
+        n : int
+            Number (year) to check
+
+        Returns
+        --------
+        True
+            If the year is leap
+        False
+            If the year isn't leap
+        """
+
+        if n > 0 and n % 4 == 0 and n % 100 != 0 or n % 400 == 0:
+            return True
+        return False
+
+    def check_phone(self, n):
+        """Function assumes that n is a phone number and checks from which country is it
+
+        Parameters
+        -----------
+        n : int
+            Number (phone number) to check
+
+        Returns
+        --------
+        dictionary
+            A dictionary with name, dial_code, code and flag of the country
+        """
+
+        if 999999999999 >= n >= 1000000000:
+            n = str(n)
+            for o in self._phone_data:
+                if str(o['dial_code']).replace('+', "") in n[:3]:
+                    return o
+        return {}
 
     def check_number(self, n):
         """Checks if number is a positive integer
@@ -468,16 +592,14 @@ class Number:
         if not n.isnumeric():
             print('Podaj liczbę')
             return False
-        # if int(n) > 9999999999999999999999999:
-        #     print("Liczba jest za duża")
-        #     return False
         if int(n) < 0:
             print("Zła liczba")
             return False
         return True
 
     def run(self, number):
-        """Function that gets all of the information about the number
+        """Function that gets all of the information about the number.
+        It runs all of the above functions in 5 different threads.
 
         Parameters
         -----------
@@ -500,12 +622,19 @@ class Number:
         primality = ThreadWithReturn(target=self.check_primality, args=(number,), name="primality")
         primality.start()
 
+        bus = ThreadWithReturn(target=self.check_bus, args=(number,), name="bus")
+        bus.start()
+
+        phone = ThreadWithReturn(target=self.check_phone, args=(number,), name="phone")
+        phone.start()
+
         data = {'timeouts': []}
 
         data.update(self.get_number_systems(number))
         data.update(self.compare_speed(number))
         data.update(self.check_additional(number))
         data['roots'] = self.check_roots(number)
+        data['year'] = self.check_year(number)
 
         if 'additional_timeout' in data:
             data['timeouts'].append('additional')
@@ -532,6 +661,13 @@ class Number:
         data['semiprime_factors'] = self.factors
         data['semiprime'] = self.semiprime
         data['divisors'] = self.divisors_tab
+
+        data['phone'] = phone.join()
+
+        try:
+            data['bus'] = bus.join()
+        except Exception:
+            data['bus'] = []
 
         for thread in threading.enumerate():
             time.sleep(0.001)

@@ -1,22 +1,17 @@
 import math
+import json
 
-def check_roots(n):
-    if number > 9999999999999999:
-        return False
-
-    data = {}
-    for i in range(2, 11):
-        tmp = n
-        is_power = True
-        while tmp != 1:
-            tmp /= i
-            if math.ceil(tmp) != math.floor(tmp):
-                is_power = False
-                break
-        if is_power:
-            data[str(i)] = True
-    return data
-
+def check_phone(n):
+    if 999999999999 >= n >= 1000000000:
+        data = []
+        f = open('phone_numbers.json', )
+        data = json.load(f)
+        f.close()
+        n = str(n)
+        for o in data:
+            if str(o['dial_code']).replace('+', "") in n[:3]:
+                return o
+    return {}
 
 number = int(input())
-print(check_roots(number))
+print(check_phone(number))

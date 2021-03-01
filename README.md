@@ -3,13 +3,7 @@
 Script that gets some interesting information about a number.
 
 Funcions:
-  - Checks if number is:
-    a) palindromic
-    b) square
-    c) triangle
-    d) taxicab
-    e) prime
-    f) semi-prime
+  - Checks if the number is: palindromic, square, triangle, taxicab, prime or semi-prime
   - Returns all of the number divisors
   - Returns number in binary, hexadecimal, octal and decimal systems 
   - Compares number to the speed of light and sound

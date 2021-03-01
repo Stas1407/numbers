@@ -540,7 +540,7 @@ class Number:
             A dictionary with name, dial_code, code and flag of the country
         """
 
-        if 999999999999 >= n >= 1000000000:
+        if 999999999999999 >= n >= 1000000000:
             n = str(n)
             for o in self._phone_data:
                 dial_code = str(o['dial_code']).replace('+', "")

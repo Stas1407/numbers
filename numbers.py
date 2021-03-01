@@ -108,6 +108,8 @@ class Number:
         -------
         TimeoutError
             If the function has been running for 10 seconds
+        ValueError
+            If the number is not a positive integer
 
         Returns
         ---------
@@ -121,7 +123,8 @@ class Number:
         try:
             n = abs(int(n))
         except ValueError:
-            print("Input must be a non-negative integer")
+            pass
+
         if n in [0, 1]:
             return False
         elif n in [2, 3, 5]:
@@ -153,7 +156,7 @@ class Number:
                 return False
         return True
 
-    @Timeout(30)
+    @Timeout(20)
     def _get_divisors_ext(self, n):
         """Gets all n's divisors and checks if n is semiprime.
         It saves results in self.divisors_tab and self.semiprime
@@ -166,7 +169,7 @@ class Number:
         Raises
         -------
         TimeoutError
-            If the function has been running for 30 seconds
+            If the function has been running for 20 seconds
 
         Returns
         --------
@@ -181,7 +184,6 @@ class Number:
                 self.divisors_tab.append(d)
                 if not self.semiprime:
                     if self.is_prime(i) and self.is_prime(d):
-                        print("Liczba półpierwsza (Iloczyn {0} i {1})".format(i, d))
                         self.semiprime = True
                         self.factors = [i, d]
 
@@ -245,7 +247,6 @@ class Number:
 
         element = math.sqrt(n)
         if math.floor(element) == math.ceil(element):
-            print("Liczba kwadratowa: " + str(element))
             return True
         return False
 
@@ -299,17 +300,12 @@ class Number:
             If timed out
         """
 
-        print('Divisors: Start')
-        start_time = time.time()
-
         try:
             self._get_divisors_ext(n)
         except TimeoutError:
-            print('Divisors: Timeout after {}'.format(time.time() - start_time))
             self.divisors_tab = sorted(self.divisors_tab)
             return False
 
-        print('Divisors: End after {}'.format(time.time() - start_time))
         return True
 
     def check_primality(self, n):
@@ -330,19 +326,12 @@ class Number:
                     True if function timed out after 10 seconds
         """
 
-        print('Primality: start')
-        start_time = time.time()
-
         try:
             if self.is_prime(n):
-                print("Liczba pierwsza")
-                print('Primality: end after {}'.format(time.time() - start_time))
                 return {'prime': True}
             else:
-                print('Primality: end after {}'.format(time.time() - start_time))
                 return {'prime': False}
         except TimeoutError:
-            print('Primality: Timeout after {}'.format(time.time() - start_time))
             return {'prime': False, 'primality_timeout': True}
 
     def get_number_systems(self, n):
@@ -364,11 +353,6 @@ class Number:
         oct_n = oct(n)
         bin_n = bin(n)
 
-        print("dec: ", dec_n)
-        print("hex: ", hex_n)
-        print("oct: ", oct_n)
-        print("bin: ", bin_n)
-
         return {"dec": dec_n, "hex": hex_n, "oct": oct_n, "bin": bin_n}
 
     def check_additional(self, n):
@@ -386,32 +370,25 @@ class Number:
             Values are True if number is given type or False if it isn't.
         """
 
-        print('Additional: start')
-        start_time = time.time()
         taxicab_numbers = [2, 1729, 87539319, 6963472309248, 48988659276962496]
         data = {'taxicab': False, 'palindromic': False, 'square': False, 'triangle': False}
 
         if n in taxicab_numbers:
-            print("Liczba taksówkowa")
             data['taxicab'] = True
 
         try:
             if self.is_palindromic(n):
-                print("Liczba palindromiczna")
                 data['palindromic'] = True
 
             if self.is_triangle(n):
-                print("Liczba trójkątna")
                 data['triangle'] = True
 
             if self.is_square(n):
                 data['square'] = True
         except TimeoutError:
-            print('Additional: Timeout after {}'.format(time.time() - start_time))
             data['additional_timeout'] = True
             return data
 
-        print('Additional: end after {}'.format(time.time() - start_time))
         return data
 
     def compare_speed(self, n):
@@ -431,10 +408,8 @@ class Number:
         LIGHT_SPEED = 299792458
         SOUND_SPEED = 340
 
-        compare_light = "{:.6f}".format(n / LIGHT_SPEED)
-        compare_sound = "{:.6f}".format(n / SOUND_SPEED)
-        print("{0} m/s = {1} x prędkość światła".format(n, compare_light))
-        print("{0} m/s = {1} x prędkość dźwięku".format(n, compare_sound))
+        compare_light = "{:.8f}".format(n / LIGHT_SPEED)
+        compare_sound = "{:.8f}".format(n / SOUND_SPEED)
 
         return {'light': compare_light, 'sound': compare_sound}
 
@@ -502,7 +477,6 @@ class Number:
 
         if n <= 998:
             url = BUS_URL.format(n)
-            print(url)
             response = requests.get(url)
             data = response.text
             if "404 Wybrana strona nie istnieje" in data:
@@ -569,7 +543,8 @@ class Number:
         if 999999999999 >= n >= 1000000000:
             n = str(n)
             for o in self._phone_data:
-                if str(o['dial_code']).replace('+', "") in n[:3]:
+                dial_code = str(o['dial_code']).replace('+', "")
+                if dial_code in n[:len(dial_code)]:
                     return o
         return {}
 
@@ -590,10 +565,10 @@ class Number:
         """
 
         if not n.isnumeric():
-            print('Podaj liczbę')
+            print('You have to input a number')
             return False
         if int(n) < 0:
-            print("Zła liczba")
+            print("Please type in a positive integer")
             return False
         return True
 

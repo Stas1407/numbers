@@ -1,6 +1,9 @@
 from numbers import Number
 
-n = input("Podaj liczbę: ")
+n = input("Type in the number: ")
 number = Number()
 data = number.run(n)
-print(data)
+
+for k, v in data.items():
+    if v:
+        print("{0}: {1}".format(k, v))

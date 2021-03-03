@@ -177,7 +177,7 @@ class Number:
         """
 
         i = 1
-        while i * i < n:
+        while i * i <= n:
             if n % i == 0:
                 d = n // i
                 self.divisors_tab.append(i)
@@ -188,7 +188,7 @@ class Number:
                         self.factors = [i, d]
 
             i += 1
-        self.divisors_tab = sorted(self.divisors_tab)
+        self.divisors_tab = list(set(sorted(self.divisors_tab)))
         return True
 
     @Timeout(5)
@@ -575,6 +575,7 @@ class Number:
     def run(self, number):
         """Function that gets all of the information about the number.
         It runs all of the above functions in 5 different threads.
+        Max execution time is 20 seconds.
 
         Parameters
         -----------

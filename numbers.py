@@ -29,8 +29,8 @@ class Number:
     is_triangle(n)
         Checks if number is triangle.
         After 5 seconds times out and raises exception.
-    get_divisors_check_semiprime(n)
-        Gets all n's divisors and check if n is semiprime.
+    get_divisors_check_semiprime_check_perfect(n)
+        Gets all n's divisors, check if n is semiprime and if n is perfect.
     check_primality(n)
         Checks if number is prime and handles eventual exception.
     get_number_systems(n)
@@ -64,6 +64,7 @@ class Number:
         f.close()
 
         self.divisors_tab = []
+        self.perfect = False
         self.semiprime = False
         self.factors = []
 
@@ -157,9 +158,9 @@ class Number:
         return True
 
     @Timeout(20)
-    def _get_divisors_ext(self, n):
-        """Gets all n's divisors and checks if n is semiprime.
-        It saves results in self.divisors_tab and self.semiprime
+    def _get_divisors_semiprime_perfect(self, n):
+        """Gets all n's divisors, checks if n is semiprime and checks if n is perfect.
+        It saves results in self.divisors_tab, self.semiprime and self.perfect
 
         Parameters
         -----------
@@ -177,17 +178,23 @@ class Number:
         """
 
         i = 1
+        suma = -n
         while i * i <= n:
             if n % i == 0:
                 d = n // i
                 self.divisors_tab.append(i)
                 self.divisors_tab.append(d)
+                suma += i + d
                 if not self.semiprime:
                     if self.is_prime(i) and self.is_prime(d):
                         self.semiprime = True
                         self.factors = [i, d]
 
             i += 1
+
+        if suma == n:
+            self.perfect = True
+
         self.divisors_tab = list(set(sorted(self.divisors_tab)))
         return True
 
@@ -283,9 +290,9 @@ class Number:
             return True
         return False
 
-    def get_divisors_check_semiprime(self, n):
-        """Gets n's divisors and checks if n is semiprime.
-        It saves results in self.divisors_tab and self.semiprime
+    def get_divisors_check_semiprime_check_perfect(self, n):
+        """Gets n's divisors, checks if n is semiprime and perfect.
+        It saves results in self.divisors_tab, self.semiprime and self.perfect.
 
         Parameters
         -----------
@@ -301,7 +308,7 @@ class Number:
         """
 
         try:
-            self._get_divisors_ext(n)
+            self._get_divisors_semiprime_perfect(n)
         except TimeoutError:
             self.divisors_tab = sorted(self.divisors_tab)
             return False
@@ -592,7 +599,7 @@ class Number:
             return
         number = int(number)
 
-        divisors = ThreadWithReturn(target=self.get_divisors_check_semiprime, args=(number,), name="divisors")
+        divisors = ThreadWithReturn(target=self.get_divisors_check_semiprime_check_perfect, args=(number,), name="divisors")
         divisors.start()
 
         primality = ThreadWithReturn(target=self.check_primality, args=(number,), name="primality")
@@ -637,6 +644,7 @@ class Number:
         data['semiprime_factors'] = self.factors
         data['semiprime'] = self.semiprime
         data['divisors'] = self.divisors_tab
+        data['perfect'] = self.perfect
 
         data['phone'] = phone.join()
 

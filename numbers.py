@@ -29,6 +29,8 @@ class Number:
     is_triangle(n)
         Checks if number is triangle.
         After 5 seconds times out and raises exception.
+    get_factors(n)
+        Gets the factors of n.
     get_divisors_check_semiprime_check_perfect(n)
         Gets all n's divisors, check if n is semiprime and if n is perfect.
     check_primality(n)
@@ -66,6 +68,7 @@ class Number:
         self.divisors_tab = []
         self.perfect = False
         self.semiprime = False
+        self.semi_prime_factors = []
         self.factors = []
 
     def _prime_generator(self, n):
@@ -188,14 +191,14 @@ class Number:
                 if not self.semiprime:
                     if self.is_prime(i) and self.is_prime(d):
                         self.semiprime = True
-                        self.factors = [i, d]
+                        self.semi_prime_factors = [i, d]
 
             i += 1
 
         if suma == n:
             self.perfect = True
 
-        self.divisors_tab = list(set(sorted(self.divisors_tab)))
+        self.divisors_tab = sorted(list(set(self.divisors_tab)))
         return True
 
     @Timeout(5)
@@ -289,6 +292,59 @@ class Number:
         elif x2 >= 0 and math.ceil(x2) == math.floor(x2):
             return True
         return False
+
+    @Timeout(15)
+    def _get_factors(self, n):
+        """Gets factors of a number.
+
+        Parameters
+        -----------
+        n : int
+            A number to get its factors
+
+        Raises
+        -------
+        TimeoutError
+            If function is running for 15 seconds
+
+        Returns
+        --------
+        True
+        """
+
+        d = 2
+
+        while n > 1:
+            if n != 0 and n % d == 0:
+                self.factors.append(d)
+                n //= d
+            else:
+                d += 1
+
+        return True
+
+    def get_factors(self, n):
+        """Wrapper for _get_factors function handles exception
+
+        Parameters
+        -----------
+        n : int
+            A number to get its factors
+
+        Returns
+        --------
+        True
+            If function didn't timeout
+        False
+            If function timed out
+        """
+
+        try:
+            self._get_factors(n)
+        except TimeoutError:
+            return False
+
+        return True
 
     def get_divisors_check_semiprime_check_perfect(self, n):
         """Gets n's divisors, checks if n is semiprime and perfect.
@@ -458,7 +514,6 @@ class Number:
                 data.append({'number': i, 'power': count})
         return data
 
-    @Timeout(10)
     def check_bus(self, n):
         """Function checks if n is a bus number and
         if n is a bus number it returns all of it stops.
@@ -467,11 +522,6 @@ class Number:
         ----------
         n : int
             Number to check
-
-        Raises
-        -------
-        TimeoutError
-            When is running for more than 10 seconds.
 
         Returns
         --------
@@ -551,7 +601,7 @@ class Number:
             n = str(n)
             for o in self._phone_data:
                 dial_code = str(o['dial_code']).replace('+', "")
-                if dial_code in n[:len(dial_code)]:
+                if dial_code in n[:len(dial_code)] and len(n[len(dial_code):]) <= 9:
                     return o
         return {}
 
@@ -581,7 +631,7 @@ class Number:
 
     def run(self, number):
         """Function that gets all of the information about the number.
-        It runs all of the above functions in 5 different threads.
+        It runs all of the above functions in 6 different threads.
         Max execution time is 20 seconds.
 
         Parameters
@@ -611,6 +661,9 @@ class Number:
         phone = ThreadWithReturn(target=self.check_phone, args=(number,), name="phone")
         phone.start()
 
+        factors = ThreadWithReturn(target=self.get_factors, args=(number,), name="factors")
+        factors.start()
+
         data = {'timeouts': []}
 
         data.update(self.get_number_systems(number))
@@ -636,22 +689,25 @@ class Number:
                     thread.raise_exception()
             result = True
         else:
+            data['composite_number'] = True
             result = divisors.join()
 
         if not result:
             data['timeouts'].append('divisors')
+            self.divisors_tab = sorted(list(set(self.divisors_tab)))
 
-        data['semiprime_factors'] = self.factors
+        data['semiprime_factors'] = self.semi_prime_factors
         data['semiprime'] = self.semiprime
         data['divisors'] = self.divisors_tab
         data['perfect'] = self.perfect
 
         data['phone'] = phone.join()
 
-        try:
-            data['bus'] = bus.join()
-        except Exception:
-            data['bus'] = []
+        data['bus'] = bus.join()
+
+        if not factors.join():
+            data['timeouts'].append('factors')
+        data['factors'] = self.factors
 
         for thread in threading.enumerate():
             time.sleep(0.001)

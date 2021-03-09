@@ -279,8 +279,11 @@ class Number:
         True
             If is triangle
         False
-            If isn't triangle
+            If isn't triangle or if number is bigger than 999999999999999
         """
+
+        if n > 999999999999999:
+            return False
 
         delta = 1 - 4 * (-2 * n)
         if delta < 0:

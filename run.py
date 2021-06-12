@@ -1,4 +1,4 @@
-from numbers import Number
+from numbers_class import Number
 
 n = input("Type in the number: ")
 number = Number()

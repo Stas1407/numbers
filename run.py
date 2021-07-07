@@ -14,3 +14,6 @@ if data:
     for k, v in data.items():
         if v:
             print("{0}: {1}".format(k, v))
+
+print("")
+input("Press enter to exit")

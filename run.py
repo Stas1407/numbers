@@ -1,4 +1,10 @@
 from numbers_class import Number
+import time
+
+print("Application: Numbers - find out everything about a number")
+print("Author: Stanislaw Rajm\n")
+time.sleep(5)
+
 
 n = input("Type in the number: ")
 number = Number()

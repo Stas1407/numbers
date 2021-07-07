@@ -8,6 +8,8 @@ from primesieve import Iterator
 from bs4 import BeautifulSoup
 import requests
 import json
+import sys
+import os
 
 class Number:
     """
@@ -56,12 +58,16 @@ class Number:
         Runs all of the above and returns all the information as a dictionary.
     """
 
+    def resource_path(self, relative_path):
+    	base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    	return os.path.join(base_path, relative_path)
+
     def __init__(self):
         self._smallprimeset = set(self._prime_generator(10000))
         self._smallprimeset_n = 10000
 
         # dictionary comes from - https://gist.github.com/Goles/3196253
-        f = open('phone_numbers.json', )
+        f = open(self.resource_path('phone_numbers.json'), )
         self._phone_data = json.load(f)
         f.close()
 
